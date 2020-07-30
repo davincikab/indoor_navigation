@@ -7,6 +7,10 @@ git clone https://github.com/davincikab/indoor_navigation.git
 ``
 
 Navigate to mapApp folder.
+``
+cd indoor_navigation
+``
+
 Install all the dependencies
 
 ``
