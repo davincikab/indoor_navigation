@@ -7,9 +7,16 @@ const IndoorControl = (props) => {
         props.onPress(level);
     }
 
-    console.log(props.levels)
+    const hideToolbar = {}
+
+    console.log(props.levels);
     return (
         <View style={styles.indoorControl}>
+            <View>
+                <TouchableOpacity>
+
+                </TouchableOpacity>
+            </View>
             {
                 props.levels.map((level, key) => (
                     <View 
@@ -57,7 +64,7 @@ const styles = StyleSheet.create({
         fontSize:15
     },
     levelText:{
-        color:"red",
+        color:"#2e2e2e",
         fontWeight:"900",
         textAlign:"center"
     }

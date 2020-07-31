@@ -1,4 +1,4 @@
-# mapApp Application
+# Indoor Navigation Application
 
 Download or clone the repository in your project folder
 
