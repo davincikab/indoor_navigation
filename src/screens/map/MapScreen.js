@@ -46,8 +46,7 @@ export default class MapContainer extends React.Component {
     onFloorChange(level) {
         // filter the data for specific floor    
         let allfloors = JSON.parse(JSON.stringify(this.state.data));
-
-        console.log(allfloors.features.length);
+        
         let activeFloorData = allfloors.features.map(feature => {
             if(feature.properties.level <= level){
               return feature

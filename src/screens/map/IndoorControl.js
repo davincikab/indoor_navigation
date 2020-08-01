@@ -1,23 +1,44 @@
-import React from 'react';
-import {View, TouchableOpacity, StyleSheet, Text } from 'react-native'
+import React , { useState} from 'react';
+import {View, TouchableOpacity, StyleSheet, Text, Image } from 'react-native';
+import chevronUp from '../../../assets/up.png';
+import chevronDown from '../../../assets/down.png';
 
 const IndoorControl = (props) => {
+    const [isCollapsed, setCollapsed ] = useState(false);
+
     const flooChangeHandler = (level) => {
         console.log("Clicked:" +level);
         props.onPress(level);
     }
 
-    const hideToolbar = {}
+    const hideToolbar = () => {
+        // Working with 
+        console.log("Hiding toolbar");
+        setCollapsed(!isCollapsed);
+    };
 
-    console.log(props.levels);
+    console.log(isCollapsed);
     return (
         <View style={styles.indoorControl}>
-            <View>
-                <TouchableOpacity>
-
+            <View style={styles.controlTab}>
+                <TouchableOpacity
+                    onPress={hideToolbar}
+                >
+                    <Image
+                        style={styles.caretImage}
+                        source={isCollapsed?require('../../../assets/down.png'):require('../../../assets/up.png')}
+                    />
+                    {/* <Text 
+                        style={{
+                            fontWeight:"900",
+                            fontSize:29,
+                            color:'#000',
+                            textAlign:'center'
+                        }}
+                    >&#94;</Text> */}
                 </TouchableOpacity>
             </View>
-            {
+            {   isCollapsed &&
                 props.levels.map((level, key) => (
                     <View 
                         style={styles.controlTab}
@@ -61,12 +82,19 @@ const styles = StyleSheet.create({
         borderColor:"#ddd",
         paddingVertical:4,
         paddingHorizontal:5,
-        fontSize:15
+        fontSize:15,
+        display:"flex",
+        alignItems:'center',
+        justifyContent:"center"
     },
     levelText:{
         color:"#2e2e2e",
         fontWeight:"900",
         textAlign:"center"
+    },
+    caretImage:{
+        height:30,
+        width:22
     }
 });
 
