@@ -82,43 +82,41 @@ export default class MapContainer extends React.Component {
 
         return (
             <View style={styles.mainView}>
-            <MapboxGL.MapView 
-            ref={(ref) => (this.map = ref)}
-            style={styles.map} 
-            >
-            <MapboxGL.Camera
-              zoomLevel={18}
-              pitch={60}
-              heading={200}
-              centerCoordinate={[36.962846352233818, -0.399017834239519]}
-            />
-
-          <MapboxGL.Light style={{position: [5, 90, this.state.sliderValue]}} />
-
-          {
-            indoorData.type &&
-            <MapboxGL.ShapeSource
-              id="indoorBuildingSource"
-              shape={indoorData}>
-              <MapboxGL.FillExtrusionLayer
-                id="building3d"
-                style={layerStyles.building}
+              <MapboxGL.MapView 
+              ref={(ref) => (this.map = ref)}
+              style={styles.map} 
+              >
+              <MapboxGL.Camera
+                zoomLevel={18}
+                pitch={60}
+                heading={200}
+                centerCoordinate={[36.962846352233818, -0.399017834239519]}
               />
-            </MapboxGL.ShapeSource>
-          }
 
-        </MapboxGL.MapView>
+            <MapboxGL.Light style={{position: [5, 90, this.state.sliderValue]}} />
 
-        <IndoorControl 
-            levels = {[0, 1, 2]}
-            onPress={this.onFloorChange}
-        />
+            {
+              indoorData.type &&
+              <MapboxGL.ShapeSource
+                id="indoorBuildingSource"
+                shape={indoorData}>
+                <MapboxGL.FillExtrusionLayer
+                  id="building3d"
+                  style={layerStyles.building}
+                />
+              </MapboxGL.ShapeSource>
+            }
 
+          </MapboxGL.MapView>
+
+          <IndoorControl 
+              levels = {[0, 1, 2]}
+              onPress={this.onFloorChange}
+          />
         </View>
         );
     }
 }
-
 
 // styles
 const styles = StyleSheet.create({

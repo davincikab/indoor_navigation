@@ -28,14 +28,6 @@ const IndoorControl = (props) => {
                         style={styles.caretImage}
                         source={isCollapsed?require('../../../assets/down.png'):require('../../../assets/up.png')}
                     />
-                    {/* <Text 
-                        style={{
-                            fontWeight:"900",
-                            fontSize:29,
-                            color:'#000',
-                            textAlign:'center'
-                        }}
-                    >&#94;</Text> */}
                 </TouchableOpacity>
             </View>
             {   isCollapsed &&
