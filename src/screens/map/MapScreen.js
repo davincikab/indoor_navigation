@@ -1,10 +1,11 @@
 import React from 'react';
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, KeyboardAvoidingView, Keyboard } from "react-native";
 
 import MapboxGL from "@react-native-mapbox-gl/maps";
 import indoorMapGeoJSON from '../../../assets/block.json';
 
 import IndoorControl from './IndoorControl';
+import GeocoderControl from './GeocoderControl';
 
 MapboxGL.setAccessToken("pk.eyJ1IjoiZGF1ZGk5NyIsImEiOiJjanJtY3B1bjYwZ3F2NGFvOXZ1a29iMmp6In0.9ZdvuGInodgDk7cv-KlujA");
 
@@ -81,7 +82,13 @@ export default class MapContainer extends React.Component {
         let indoorData = this.state.activeFloor;
 
         return (
+          <KeyboardAvoidingView
+            behavior={Platform.OS == "ios" ? "padding" : "height"}
+            style={styles.container}
+            keyboardVerticalOffset={-50}
+          >
             <View style={styles.mainView}>
+              <GeocoderControl />
               <MapboxGL.MapView 
               ref={(ref) => (this.map = ref)}
               style={styles.map} 
@@ -114,7 +121,8 @@ export default class MapContainer extends React.Component {
               onPress={this.onFloorChange}
           />
         </View>
-        );
+        </KeyboardAvoidingView>
+        )
     }
 }
 
@@ -124,11 +132,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#F5FCFF"
       },
-      container: {
-        height: 650,
-        width: 450,
+    container: {
+        flex:1,
         backgroundColor: "tomato"
-      },
+    },
     map: {
         flex: 1,
         top:0,

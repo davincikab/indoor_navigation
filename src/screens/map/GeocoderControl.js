@@ -22,8 +22,8 @@ const GeocoderControl = (props) => {
 
     // update the addresses
     const onFocus = () => {
-
-    }
+        
+    }   
 
     // flatlist items
     const renderItem = (item) => {
@@ -36,11 +36,14 @@ const GeocoderControl = (props) => {
         style={styles.geocoderView}
         >
             <TextInput
+                style={styles.formControl}
                 key={'start'}
                 onChange={onStartLocationChange}
+
             ></TextInput>
 
             <TextInput
+                style={styles.formControl}
                 key={"destination"}
                 onChange={onDestinatioLocationChange}
             ></TextInput>
@@ -59,12 +62,15 @@ const styles = StyleSheet.create({
         position:"absolute",
         top:4,
         left:10,
-        right:0,
+        right:10,
         zIndex:1,
     },
     formControl:{
         paddingHorizontal:12,
-        paddingVertical:5
+        paddingVertical:5,
+        backgroundColor:"white",
+        borderColor:"#ddd",
+        borderWidth:2
     }
 });
 
