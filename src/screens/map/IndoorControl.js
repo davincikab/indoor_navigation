@@ -1,10 +1,10 @@
 import React , { useState} from 'react';
-import {View, TouchableOpacity, StyleSheet, Text, Image } from 'react-native';
-import chevronUp from '../../../assets/up.png';
-import chevronDown from '../../../assets/down.png';
+import {View, TouchableOpacity, StyleSheet, Text, Image} from 'react-native';
+import RoundButton from '../../library/RoundButton';
 
 const IndoorControl = (props) => {
     const [isCollapsed, setCollapsed ] = useState(false);
+    const [controlIndex, setControlIndex] = useState(0)
 
     const flooChangeHandler = (level) => {
         console.log("Clicked:" +level);
@@ -17,26 +17,28 @@ const IndoorControl = (props) => {
         setCollapsed(!isCollapsed);
     };
 
+
     console.log(isCollapsed);
     return (
         <View style={styles.indoorControl}>
-            <View style={styles.controlTab}>
-                <TouchableOpacity
-                    onPress={hideToolbar}
-                >
-                    <Image
-                        style={styles.caretImage}
-                        source={isCollapsed?require('../../../assets/down.png'):require('../../../assets/up.png')}
-                    />
-                </TouchableOpacity>
-            </View>
+            <RoundButton
+                onPress={props.onToggleGeocoder}
+                text="Go"
+            />
+
+            <TouchableOpacity
+                onPress={hideToolbar}
+                style={styles.controlTab}
+            >
+                <Image
+                    style={styles.caretImage}
+                    source={isCollapsed?require('../../../assets/down.png'):require('../../../assets/up.png')}
+                />
+            </TouchableOpacity>
             {   isCollapsed &&
                 props.levels.map((level, key) => (
-                    <View 
-                        style={styles.controlTab}
-                        key={key}
-                    >
                         <TouchableOpacity
+                            style={styles.controlTab}
                             key={key}
                             onPress={() => flooChangeHandler(level)}
                         >
@@ -45,7 +47,6 @@ const IndoorControl = (props) => {
                                     {level}
                             </Text>
                         </TouchableOpacity>
-                    </View>
                 ))
             }
         </View>
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
         position:"absolute",
         bottom:20,
         right:16,
-        zIndex:3,
+        zIndex:1,
         padding:4,
         flex:1,
         width:48,

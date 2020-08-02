@@ -31,7 +31,8 @@ export default class MapContainer extends React.Component {
             pitch:220,
             sliderValue: 80,
             data:{},
-            activeFloor:{}
+            activeFloor:{}, 
+            controlIndex:0
         };
 
         
@@ -63,6 +64,10 @@ export default class MapContainer extends React.Component {
 
     }
 
+    toggleGeocoder = () => {
+      this.state.controlIndex == 0 ? this.setState({controlIndex:3}) : this.setState({controlIndex:0});
+    }
+
     // load the data 
     componentDidMount() {
         MapboxGL.setTelemetryEnabled(false);
@@ -88,7 +93,11 @@ export default class MapContainer extends React.Component {
             keyboardVerticalOffset={-50}
           >
             <View style={styles.mainView}>
-              <GeocoderControl />
+              <GeocoderControl 
+                data={indoorMapGeoJSON}
+                controlIndex={this.state.controlIndex}
+              />
+
               <MapboxGL.MapView 
               ref={(ref) => (this.map = ref)}
               style={styles.map} 
@@ -119,6 +128,7 @@ export default class MapContainer extends React.Component {
           <IndoorControl 
               levels = {[0, 1, 2]}
               onPress={this.onFloorChange}
+              onToggleGeocoder={this.toggleGeocoder}
           />
         </View>
         </KeyboardAvoidingView>
