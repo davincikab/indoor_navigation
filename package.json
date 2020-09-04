@@ -11,14 +11,17 @@
   },
   "dependencies": {
     "@react-native-community/masked-view": "^0.1.10",
+    "@react-native-community/voice": "^1.1.8",
     "@react-native-mapbox-gl/maps": "^8.1.0-rc.2",
     "@react-navigation/native": "^5.7.2",
+    "@turf/turf": "^5.1.6",
     "react": "16.13.1",
     "react-native": "0.63.1",
     "react-native-gesture-handler": "^1.7.0",
     "react-native-reanimated": "^1.10.1",
     "react-native-safe-area-context": "^3.1.1",
-    "react-native-screens": "^2.9.0"
+    "react-native-screens": "^2.9.0",
+    "react-native-tts": "^3.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",

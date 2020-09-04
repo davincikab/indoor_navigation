@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import {View, TextInput, FlatList, StyleSheet, TouchableHighlight, Text, Button} from 'react-native';
+import {    
+    View, 
+    TextInput, 
+    FlatList, 
+    StyleSheet,
+    TouchableOpacity,
+    TouchableHighlight, 
+    Text,
+    Button} from 'react-native';
 import RoundButton from '../../library/RoundButton';
  
 const GeocoderControl = (props) => {
@@ -113,7 +121,13 @@ const GeocoderControl = (props) => {
                 zIndex:controlIndex,
                 ...styles.geocoderView
             }}
-        >
+        >   
+            <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => props.toggleGeocoder()}
+            >
+                <Text>Back</Text>
+            </TouchableOpacity>
             <TextInput
                 style={styles.formControl}
                 key={'start'}
@@ -149,6 +163,12 @@ const GeocoderControl = (props) => {
                 <RoundButton
                     onPress={calculateRoute}
                     text="Go home"
+                    styles={{
+                        borderRadius:35,
+                        height:70,
+                        width:70,
+                        marginLeft:"40%",
+                    }}
                 />
              }
         </View>
@@ -175,7 +195,17 @@ const styles = StyleSheet.create({
         borderTopWidth:0,
         borderLeftWidth:0,
         borderRightWidth:0,
-        marginHorizontal:20
+        marginHorizontal:25
+    },
+    backButton:{
+        position:"relative",
+        backgroundColor:'#de34',
+        width:36,
+        marginLeft:3,
+        marginTop:2,
+        marginBottom:0,
+        paddingHorizontal:2,
+        paddingVertical:4
     },
     resultsView:{
         flex:0.8,

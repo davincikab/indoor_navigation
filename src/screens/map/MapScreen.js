@@ -1,11 +1,23 @@
 import React from 'react';
-import { StyleSheet, View, KeyboardAvoidingView, Keyboard } from "react-native";
+import { 
+  StyleSheet, 
+  View, 
+  KeyboardAvoidingView, 
+  Text,
+  TouchableOpacity,
+  Keyboard 
+} from "react-native";
+
+import Voice from '@react-native-community/voice';
+import Tts from 'react-native-tts';
 
 import MapboxGL from "@react-native-mapbox-gl/maps";
 import indoorMapGeoJSON from '../../../assets/block.json';
 
 import IndoorControl from './IndoorControl';
 import GeocoderControl from './GeocoderControl';
+
+import * as turf from '@turf/turf';
 
 MapboxGL.setAccessToken("pk.eyJ1IjoiZGF1ZGk5NyIsImEiOiJjanJtY3B1bjYwZ3F2NGFvOXZ1a29iMmp6In0.9ZdvuGInodgDk7cv-KlujA");
 
@@ -32,13 +44,103 @@ export default class MapContainer extends React.Component {
             sliderValue: 80,
             data:{},
             activeFloor:{}, 
-            controlIndex:0
+            controlIndex:0,
+            results:[],
+            start:false,
+            end:false,
+            recognized:false,
+            language:'en-US',
+            voice:'',
         };
 
         
 
         this.onSliderChange = this.onSliderChange.bind(this);
         this.onFloorChange = this.onFloorChange.bind(this);
+
+        Voice.onSpeechStart = this.onSpeechStartHandler.bind(this);
+        Voice.onSpeechEnd = this.onSpeechEndHandler.bind(this);
+        Voice.onSpeechRecognized = this.onSpeechRecognizedHandler.bind(this);
+        Voice.onSpeechResults = this.onSpeechResultsHandler.bind(this);
+        this.onStartButtonPress.bind(this);
+        this.textToSpeech.bind(this);
+
+        Tts.setDefaultLanguage(this.state.language);
+        Tts.setDefaultVoice("sw");
+        Tts.setDefaultRate(0.4);
+    }
+
+    async onStartButtonPress(e){
+      // this.setState({
+      //   recognized: false,
+      //   start: false,
+      //   end:false,
+      //   results: [],
+      // });
+
+      try {
+        await Voice.start('en-US').catch(error => {
+          throw new Error(error.message);
+        });
+
+        console.log("Starting Voice Recognition");
+      } catch (e) {
+        // console.error(e);
+        console.log("Error: " + e.message);
+      }
+    }
+
+    onSpeechStartHandler(e) {
+      console.log("Start Speech Recognition");
+      this.setState({
+        start:true
+      });
+    }
+
+    onSpeechRecognizedHandler(e) {
+      console.log("Speech Recognized");
+      this.setState({
+        recognized:true
+      });
+    }
+
+    onSpeechEndHandler(e) {
+      console.log("End Speech Recognition");
+      this.setState({
+        end:true
+      });
+    }
+
+    onSpeechResultsHandler(e) {
+      console.log(e.value);
+      this.setState({
+        results:e.value
+      });
+    }
+
+    // tts
+    textToSpeech() {
+      Tts.voices().then(vc => {
+        // console.log(vc);
+        vc.forEach(v => {
+          if(v.language.includes('sw')) {
+            console.log(v);
+          }
+        });
+      });
+      
+      Tts.speak("Tembea mita 150 ukielekea A2");
+    }
+
+    toggleLanguageAndVoice() {
+      let voice = this.state.voice == "sw" ? "en-US" : "sw";
+      let language = this.state.language == "sw-KE" ? "en-US" : "sw-KE";
+
+      // check network connection
+      this.setState({
+        language,
+        voice
+      });
     }
 
     onSliderChange(value) {
@@ -80,7 +182,8 @@ export default class MapContainer extends React.Component {
 
     // unmount the component
     componentWillUnmount() {
-
+      Voice.destroy().then(Voice.removeAllListeners());
+      Tts.stop();
     }
 
     render() {
@@ -96,6 +199,7 @@ export default class MapContainer extends React.Component {
               <GeocoderControl 
                 data={indoorMapGeoJSON}
                 controlIndex={this.state.controlIndex}
+                toggleGeocoder={this.toggleGeocoder}
               />
 
               <MapboxGL.MapView 
@@ -130,6 +234,33 @@ export default class MapContainer extends React.Component {
               onPress={this.onFloorChange}
               onToggleGeocoder={this.toggleGeocoder}
           />
+
+          <TouchableOpacity
+            onPress= {this.onStartB}
+            style={styles.buttonSpeechStart}
+          >
+            <Text 
+              styles={{
+                color:"red"
+              }}
+            >Speech</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress= {this.textToSpeech}
+            style={{
+              marginLeft:70,
+              ...styles.buttonSpeechStart
+            }}
+          >
+            <Text 
+              styles={{
+                color:"red"
+              }}
+            >TSpeech</Text>
+          </TouchableOpacity>
+
+
         </View>
         </KeyboardAvoidingView>
         )
@@ -155,5 +286,30 @@ const styles = StyleSheet.create({
         zIndex:0,
         position:'absolute',
         zIndex:0
+    },
+
+    buttonSpeechStart:{
+      position:"absolute",
+      zIndex:1,
+      top:12,
+      left:12,
+      // color:'white',
+      backgroundColor:'#F2F2F2',
+      padding:6,
+      display:"flex",
+      justifyContent:"center",
+      alignItems:"center",
     }
 });
+
+
+// Calculate the shortest path
+// Initialize a list of coordinates
+// create a graph object
+// calculate the distances (weight), 
+// remove the point from previous array
+// push the point to line coordinates
+// set the point to start 
+// repeat step 2,3,4
+// create the linework
+// display the line

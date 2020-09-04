@@ -1,6 +1,6 @@
 import React , { useState} from 'react';
 import {View, TouchableOpacity, StyleSheet, Text, Image} from 'react-native';
-import RoundButton from '../../library/RoundButton';
+import RoundButton from 'library/RoundButton';
 
 const IndoorControl = (props) => {
     const [isCollapsed, setCollapsed ] = useState(false);
@@ -20,11 +20,27 @@ const IndoorControl = (props) => {
 
     console.log(isCollapsed);
     return (
-        <View style={styles.indoorControl}>
-            <RoundButton
+        <View 
+            style={{
+                flex:1,
+                position:"absolute",
+                bottom:20,
+                right:10,
+            }}
+        >
+        <RoundButton
                 onPress={props.onToggleGeocoder}
                 text="Go"
-            />
+                styles={{
+                    height:35,
+                    width:42,
+                    marginRight:0,
+                    borderRadius:17,
+                    marginBottom:5
+                }}
+        />
+        <View style={styles.indoorControl}>
+            
 
             <TouchableOpacity
                 onPress={hideToolbar}
@@ -50,14 +66,15 @@ const IndoorControl = (props) => {
                 ))
             }
         </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     indoorControl:{
-        position:"absolute",
-        bottom:20,
-        right:16,
+        // position:"absolute",
+        // bottom:20,
+        // right:16,
         zIndex:1,
         padding:4,
         flex:1,

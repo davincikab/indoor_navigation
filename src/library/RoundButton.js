@@ -7,7 +7,10 @@ const RoundButton = (props) => {
             onPress={props.onPress}
         >
             <View 
-                style={styles.button}
+                style={{
+                    ...props.styles,
+                    ...styles.button
+                }}
             >
                 <Text style={styles.buttonText}>{props.text}</Text>
             </View>
@@ -17,11 +20,7 @@ const RoundButton = (props) => {
 
 const styles = StyleSheet.create({
     button:{
-        borderRadius:35,
         backgroundColor:"#2e2e2e",
-        height:70,
-        width:70,
-        marginLeft:"40%",
         alignItems:"center",
         justifyContent:"center"
     },
