@@ -36,6 +36,13 @@ const layerStyles = {
   path:{
     lineColor:"#ef9f15",
     lineWidth:3
+  }, 
+  shortestPath:{
+    lineColor:"#82ea2c",
+    lineWidth:3.2
+  },
+  pointSymbol:{
+    iconImage:"marker"
   }
 };
 
@@ -64,7 +71,8 @@ export default class MapContainer extends React.Component {
             startLocation:[36.962823225340053, -0.398801621759547],
             stopLocation:[ 36.962901834684395, -0.398867256558991],
             threed:false,
-            path:{}
+            path:{},
+            shortestPath:{}
         };
 
         
@@ -187,11 +195,14 @@ export default class MapContainer extends React.Component {
     // load the data 
     componentDidMount() {
         MapboxGL.setTelemetryEnabled(false);
-      
+
+        let shortestPath = JSON.parse(JSON.stringify(Path));
+        shortestPath.features = shortestPath.features.filter(feature => feature.properties.id === 1);
         this.setState({
           activeFloor:indoorMapGeoJSON,
           data:JSON.parse(JSON.stringify(indoorMapGeoJSON)),
-          path:Path
+          path:Path,
+          shortestPath:shortestPath
         });
     }
 
@@ -203,6 +214,17 @@ export default class MapContainer extends React.Component {
 
     render() {
         let indoorData = this.state.activeFloor;
+        let startLocation = {
+          "type": "FeatureCollection",
+          "name": "paths",
+          "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+          "features": [
+            { "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ ...this.state.startLocation ] } },
+            { "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ ...this.state.stopLocation ] } }
+          ]
+        };
+
+        console.log(startLocation)
 
         return (
           <KeyboardAvoidingView
@@ -229,6 +251,11 @@ export default class MapContainer extends React.Component {
               />
 
             {/* <MapboxGL.Light style={{position: [5, 90, this.state.sliderValue]}} /> */}
+            <MapboxGL.Images 
+              images={{
+                'marker':require("../../../assets/icon.png")
+              }}
+            />
 
             {
               indoorData.type && this.state.threed &&
@@ -258,12 +285,38 @@ export default class MapContainer extends React.Component {
             {
               this.state.path.type &&
               <MapboxGL.ShapeSource
-                id="shortest_path"
+                id="path"
                 shape={this.state.path}
               >
                 <MapboxGL.LineLayer 
                   id="path"
                   style={layerStyles.path}
+                />
+              </MapboxGL.ShapeSource>
+            }
+
+            {
+              this.state.shortestPath.type &&
+              <MapboxGL.ShapeSource
+                id="shortest-path"
+                shape={this.state.shortestPath}
+              >
+                <MapboxGL.LineLayer 
+                  id="short-path"
+                  style={layerStyles.shortestPath}
+                />
+              </MapboxGL.ShapeSource>
+            }
+
+            {
+              this.state.startLocation[0] &&
+              <MapboxGL.ShapeSource
+                id="start"
+                shape={startLocation}
+              >
+                <MapboxGL.SymbolLayer 
+                  id="start-location"
+                  style={layerStyles.pointSymbol}
                 />
               </MapboxGL.ShapeSource>
             }
