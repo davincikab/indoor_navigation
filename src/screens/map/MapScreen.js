@@ -12,7 +12,8 @@ import Voice from '@react-native-community/voice';
 import Tts from 'react-native-tts';
 
 import MapboxGL from "@react-native-mapbox-gl/maps";
-import indoorMapGeoJSON from '../../../assets/block.json';
+import indoorMapGeoJSON from '../../../assets/indoor.json';
+import Path from "../../../assets/paths.json";
 
 import IndoorControl from './IndoorControl';
 import GeocoderControl from './GeocoderControl';
@@ -25,11 +26,20 @@ const layerStyles = {
   building: {
     fillExtrusionOpacity: 0.5,
     fillExtrusionHeight: ['get', 'height'],
-    fillExtrusionBase: ['get', 'base_height'],
+    fillExtrusionBase: ['get', 'base_heigh'],
     fillExtrusionColor: ['get', 'color'],
     // fillExtrusionColorTransition: {duration: 2000, delay: 0},
   },
+  building2d:{
+    fillColor:['get', 'color']
+  },
+  path:{
+    lineColor:"#ef9f15",
+    lineWidth:3
+  }
 };
+
+ 
 
 export default class MapContainer extends React.Component {
     constructor(props) {
@@ -51,6 +61,10 @@ export default class MapContainer extends React.Component {
             recognized:false,
             language:'en-US',
             voice:'',
+            startLocation:[36.962823225340053, -0.398801621759547],
+            stopLocation:[ 36.962901834684395, -0.398867256558991],
+            threed:false,
+            path:{}
         };
 
         
@@ -176,7 +190,8 @@ export default class MapContainer extends React.Component {
       
         this.setState({
           activeFloor:indoorMapGeoJSON,
-          data:JSON.parse(JSON.stringify(indoorMapGeoJSON))
+          data:JSON.parse(JSON.stringify(indoorMapGeoJSON)),
+          path:Path
         });
     }
 
@@ -213,16 +228,42 @@ export default class MapContainer extends React.Component {
                 centerCoordinate={[36.962846352233818, -0.399017834239519]}
               />
 
-            <MapboxGL.Light style={{position: [5, 90, this.state.sliderValue]}} />
+            {/* <MapboxGL.Light style={{position: [5, 90, this.state.sliderValue]}} /> */}
 
             {
-              indoorData.type &&
+              indoorData.type && this.state.threed &&
               <MapboxGL.ShapeSource
                 id="indoorBuildingSource"
                 shape={indoorData}>
                 <MapboxGL.FillExtrusionLayer
                   id="building3d"
                   style={layerStyles.building}
+                />
+              </MapboxGL.ShapeSource>
+            }
+
+            {
+              indoorData.type &&
+              <MapboxGL.ShapeSource
+                id="indoor_2d"
+                shape={indoorData}
+              >
+                <MapboxGL.FillLayer 
+                  id="building2d"
+                  style={layerStyles.building2d}
+                />
+              </MapboxGL.ShapeSource>
+            }
+
+            {
+              this.state.path.type &&
+              <MapboxGL.ShapeSource
+                id="shortest_path"
+                shape={this.state.path}
+              >
+                <MapboxGL.LineLayer 
+                  id="path"
+                  style={layerStyles.path}
                 />
               </MapboxGL.ShapeSource>
             }

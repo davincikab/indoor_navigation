@@ -1,7 +1,5 @@
-import * as turf from '@turf/turf';
-
 class CalculateRoute {
-    constructor(start, stop, coords, obstacle) {
+    constructor(start, stop, coords, obstacle, floor) {
         this.start = start;
         this.stop = stop;
         this.floor = floor;
@@ -13,15 +11,15 @@ class CalculateRoute {
     }
 
     createGraph() {
-        this.coords = this.nameCoords(this.coords);
+        // this.coords = this.nameCoords(this.coords);
 
         var graph = {};
         var edges = {};
 
-        for (let current of coords) {
+        for (let current of this.coords) {
             graph[current[2].toString()] = [];
             edges[current[2].toString()] = {};
-            for(let comparer of coords) {
+            for(let comparer of this.coords) {
                 if(comparer == current) {
                     continue;
                 }else {
@@ -30,10 +28,15 @@ class CalculateRoute {
                     // tailor the graph.
                     var path = turf.lineString([current, comparer]);
                     // var fts = polygon;
+                    console.log("Outer Object");
+                    console.log(path);
+                    console.log(comparer, current);
                     if(
-                        turf.booleanCrosses(path, polygon.features[0]) ||
-                        turf.booleanCrosses(path, polygon.features[1])
+                        turf.booleanCrosses(path, polygon.features[0]) 
+                        // ||
+                        // turf.booleanCrosses(path, polygon.features[1])
                     ) {
+                        console.log("Object");
                         continue
                     }else {
                         let weight = this.distanceBetweenNodes(current, comparer);
@@ -124,7 +127,7 @@ class CalculateRoute {
 
             // move the current node to the visited set
             visited.push(node);
-            node = shortestDistanceNode(distances, visited);
+            node = this.shortestDistanceNode(distances, visited);
 
         }
 
@@ -152,7 +155,7 @@ class CalculateRoute {
     }
 
 
-    shortestPathDistanceNode(ditance, node) {
+    shortestDistanceNode(distances, visited) {
         let shortest = null;
         for (const node in distances) {
             let currentIsShortest = shortest === null || distances[node] < distances[shortest];
@@ -166,20 +169,24 @@ class CalculateRoute {
     }
 
     getRoute() {
-        let {distances, path} = getShortestPath(edges, start, stop);
+        let [graph, edges] = this.createGraph();
+        let {distances, path} = this.getShortestPath(edges, this.start, this.stop);
 
         let pt = path.map(pt => parseInt(pt));
 
         console.log(pt);
         let stpCoord = pt.reduce((pv,ac, i) => {
-            if(coords[ac]) {
-                pv.push(coords[ac]);
+            if(this.coords[ac]) {
+                pv.push(this.coords[ac]);
             }
             return pv;
         }, []);
 
         console.log(stpCoord);
 
+        if(!stpCoord[0]) {
+            throw Error("No path found");
+        }
         let shortestPath = turf.lineString(stpCoord);
 
         // add path to map
@@ -187,14 +194,8 @@ class CalculateRoute {
     }
 
     getDirections() {
-        let dir = "Walk ";
+        let dir = "Walk towards ";
 
         return dir;
     }
 }
-
-// Directions
-
-
-
-export default CalculateRoute;
