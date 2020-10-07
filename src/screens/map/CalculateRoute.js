@@ -27,10 +27,7 @@ class CalculateRoute {
 
                     // tailor the graph.
                     var path = turf.lineString([current, comparer]);
-                    // var fts = polygon;
-                    console.log("Outer Object");
-                    console.log(path);
-                    console.log(comparer, current);
+
                     if(
                         turf.booleanCrosses(path, polygon.features[0]) 
                         // ||
@@ -44,7 +41,6 @@ class CalculateRoute {
 
                         edges[current[2].toString()][comparer[2].toString()] = weight;
                     }
-
                     
 
                 }
@@ -64,9 +60,9 @@ class CalculateRoute {
             obstacles: polygon
         };
 
-        var path = turf.shortestPath(start, end, options);
+        // var path = turf.shortestPath(start, end, options);
+        let distance = Math.sqrt(Math.pow((start[0] - end[0]),2)- Math.pow((start[1] - end[1]),2))
 
-        let distance = turf.length(path);
         return distance * 1000;
     }
 
@@ -169,8 +165,13 @@ class CalculateRoute {
     }
 
     getRoute() {
+        console.time("graph");
         let [graph, edges] = this.createGraph();
+        console.timeEnd("graph");
+
+        console.time("ShortestPath");   
         let {distances, path} = this.getShortestPath(edges, this.start, this.stop);
+        console.timeEnd("ShortestPath");
 
         let pt = path.map(pt => parseInt(pt));
 

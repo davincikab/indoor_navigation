@@ -353,7 +353,7 @@ export default class MapContainer extends React.Component {
               }}
             >TSpeech</Text>
           </TouchableOpacity>
-
+          
 
         </View>
         </KeyboardAvoidingView>
