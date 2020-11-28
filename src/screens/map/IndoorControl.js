@@ -1,14 +1,15 @@
 import React , { useState} from 'react';
 import {View, TouchableOpacity, StyleSheet, Text, Image} from 'react-native';
 import RoundButton from 'library/RoundButton';
+import PropTypes from 'prop-types';
 
-const IndoorControl = (props) => {
+const IndoorControl = ({levels, activeLevel, onPress, onToggleGeocoder}) => {
     const [isCollapsed, setCollapsed ] = useState(false);
     const [controlIndex, setControlIndex] = useState(0)
 
     const flooChangeHandler = (level) => {
         console.log("Clicked:" +level);
-        props.onPress(level);
+        onPress(level);
     }
 
     const hideToolbar = () => {
@@ -19,6 +20,7 @@ const IndoorControl = (props) => {
 
 
     console.log(isCollapsed);
+
     return (
         <View 
             style={{
@@ -29,7 +31,7 @@ const IndoorControl = (props) => {
             }}
         >
         <RoundButton
-                onPress={props.onToggleGeocoder}
+                onPress={onToggleGeocoder}
                 text="Go"
                 styles={{
                     height:35,
@@ -48,19 +50,26 @@ const IndoorControl = (props) => {
             >
                 <Image
                     style={styles.caretImage}
-                    source={isCollapsed?require('../../../assets/down.png'):require('../../../assets/up.png')}
+                    source={isCollapsed?require('../../../assets/images/down.png'):require('../../../assets/images/up.png')}
                 />
             </TouchableOpacity>
             {   isCollapsed &&
-                props.levels.map((level, key) => (
+                levels.map((level, key) => (
                         <TouchableOpacity
-                            style={styles.controlTab}
+                            style={[
+                                styles.controlTab,
+                                (level == activeLevel ? styles.activeTab : {})
+                            ]}
                             key={key}
                             onPress={() => flooChangeHandler(level)}
                         >
                             <Text 
-                                style={styles.levelText}>
-                                    {level}
+                                style={[
+                                    styles.levelText,
+                                    (level == activeLevel ? styles.activeText : {})
+                                ]}
+                            >
+                                {level}
                             </Text>
                         </TouchableOpacity>
                 ))
@@ -69,6 +78,17 @@ const IndoorControl = (props) => {
         </View>
     );
 }
+
+IndoorControl.propTypes = {
+    levels:PropTypes.arrayOf(PropTypes.number.isRequired),
+    activeLevel:PropTypes.number.isRequired,
+    onPress:PropTypes.func.isRequired,
+    onToggleGeocoder:PropTypes.func.isRequired
+};
+
+IndoorControl.defualtProps = {
+    activeLevel:''
+};
 
 const styles = StyleSheet.create({
     indoorControl:{
@@ -96,6 +116,12 @@ const styles = StyleSheet.create({
         display:"flex",
         alignItems:'center',
         justifyContent:"center"
+    },
+    activeTab:{
+        backgroundColor:'#252525'
+    },
+    activeText:{
+        color:'#fff'
     },
     levelText:{
         color:"#2e2e2e",

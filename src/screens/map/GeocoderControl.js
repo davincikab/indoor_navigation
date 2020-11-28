@@ -9,19 +9,40 @@ import {
     Text,
     Button} from 'react-native';
 import RoundButton from '../../library/RoundButton';
+import edges from '../../../assets/data/edges';
+import CalculateRoute from '../../utils/routing/CalculateRoute';
+
+var obstacle  = {
+    "type": "FeatureCollection",
+    "name": "obstacle_polygons",
+    "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+    "features": [
+    { "type": "Feature", "properties": { "fid": 1.0, "Name": "Ground Flloor", "Area": 20.28728, "height": 4.0, "use": "None", "level": 1.0, "image": null, "base_heigh": 4.0, "color": "grey" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 36.963070271457362, -0.399120213964914 ], [ 36.963069691221691, -0.399151980225768 ], [ 36.963075590259848, -0.39915210289473 ], [ 36.963075587694526, -0.399162525881851 ], [ 36.963063187791825, -0.399161795603598 ], [ 36.963062122464379, -0.399209810820704 ] ] ] } },
+    ]
+};
  
-const GeocoderControl = (props) => {
+const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, updatePath}) => {
     const [startAddress, setStartAddress] = useState('');
-    const [destination, setDestination] = useState('');
+    const [destinationAddress, setDestinationAddress] = useState('');
+    const [activeInput, setActiveInput] = useState();
+    const [startId, setStartId] = useState();
+    const [destinationId, setDestionationId] = useState();
+    const [ origin, setOrigin] = useState();
+    const [ destination, setDestination] = useState();
+
     const [addresses, setAddress] = useState([]);
-    const [indoorPoints, setIndoorPoints] = useState(props.data);
-    const [controlIndex, setControlIndex] = useState(props.controlIndex);
+    const [indoorPoints, setIndoorPoints] = useState();
+    const [controlIndex, setControlIndex] = useState();
 
     // update the zIndex
     useEffect(() => {
-        console.log("GeocoderIndex: " + props.controlIndex);
-        setControlIndex(props.controlIndex);
-    }, [props.controlIndex]);
+        console.log("GeocoderIndex: " + controlIndex);
+        setControlIndex(controlZIndex);
+
+        let points = JSON.parse(JSON.stringify(data));
+        points.features = points.features.filter(feature => feature.properties.level == activeLevel);
+        setIndoorPoints(points);
+    }, [controlZIndex, activeLevel]);
 
 
     // filter addresses
@@ -59,7 +80,7 @@ const GeocoderControl = (props) => {
 
     const onDestinatioLocationChange = (text) =>{
         console.log(text)
-        setDestination(text);
+        setDestinationAddress(text);
 
         if(!text) {
             setAddress([]);
@@ -76,11 +97,61 @@ const GeocoderControl = (props) => {
     // On item press
     const onItemPress = (item) => {
         console.log(item.properties.Name);
-        setStartAddress(item.properties.Name);
+        if(activeInput == "origin") {
+            setStartAddress(item.properties.Name);
+            setStartId(item.properties.fid);
+
+
+            setOrigin(item);
+        } else {
+            setDestinationAddress(item.properties.Name);
+            setDestionationId(item.properties.fid);
+            setDestination(item);
+        }
+        
+        setAddress([]);
     }
 
     const calculateRoute = () => {
+    
         // spinner update the path
+        let pointsClone = JSON.parse(JSON.stringify(indoorPoints));
+        pointsClone.features = pointsClone.features.filter(feature => feature.properties.level == activeLevel);
+        
+        let coords = pointsClone.features.map(feature => {
+            let coord = feature.geometry.coordinates;
+        
+            coord.push(feature.properties.fid);
+        
+            return coord;
+        });
+
+        let myRoute = new CalculateRoute(coords, obstacle,activeLevel);
+        myRoute.edges = edges[activeLevel];
+        let routeFeatures = myRoute.getRoute(startId, destinationId);
+
+        console.log(routeFeatures);
+        if(routeFeatures.type) {
+            // strip the extra coordinates
+            routeFeatures.geometry.coordinates = routeFeatures.geometry.coordinates.map(coord => {
+                coord = coord.slice(0,2);
+                return coord
+            });
+
+            console.log(routeFeatures);
+
+            let geojsonRoute = {
+                'type':'FeatureCollection',
+                'features':[routeFeatures]
+            };
+
+            console.log(geojsonRoute);
+            updatePath(geojsonRoute, origin, destination);
+
+        } else {
+            // update route info
+            
+        }
 
         // hide this component
         setControlIndex(0);
@@ -124,7 +195,7 @@ const GeocoderControl = (props) => {
         >   
             <TouchableOpacity 
                 style={styles.backButton}
-                onPress={() => props.toggleGeocoder()}
+                onPress={() => toggleGeocoder()}
             >
                 <Text>Back</Text>
             </TouchableOpacity>
@@ -133,6 +204,7 @@ const GeocoderControl = (props) => {
                 key={'start'}
                 placeholder={"Current Location ...."}
                 onChangeText={text => onStartLocationChange(text)}
+                onFocus={() => setActiveInput("origin")}
                 value={startAddress}
             ></TextInput>
 
@@ -141,7 +213,8 @@ const GeocoderControl = (props) => {
                 key={"destination"}
                 placeholder={"Destination Location ...."}
                 onChangeText ={text => onDestinatioLocationChange(text)}
-                value={destination}
+                onFocus={() => setActiveInput("destination")}
+                value={destinationAddress}
             ></TextInput>
 
             {/* Results View */}
@@ -159,7 +232,7 @@ const GeocoderControl = (props) => {
                 
             </View>
             {
-                Boolean(destination) && Boolean(startAddress) &&
+                Boolean(destinationAddress) && Boolean(startAddress) &&
                 <RoundButton
                     onPress={calculateRoute}
                     text="Go home"
@@ -228,9 +301,12 @@ const styles = StyleSheet.create({
     },
     textSmall:{
         fontSize:14,
-        color:"#ddd",
+        color:"#000",
         fontStyle:"italic"
     }
 });
 
 export default GeocoderControl;
+
+
+// TODO: Animate the layout

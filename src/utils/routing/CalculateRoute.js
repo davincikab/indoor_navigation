@@ -1,7 +1,9 @@
-class CalculateRoute {
-    constructor(start, stop, coords, obstacle, floor) {
-        this.start = start;
-        this.stop = stop;
+import * as turf from '@turf/turf';
+
+export default class CalculateRoute {
+    constructor(coords, obstacle, floor) {
+        // this.start = start;
+        // this.stop = stop;
         this.floor = floor;
         this.path = [];
         this.graph = {};
@@ -12,9 +14,9 @@ class CalculateRoute {
 
     createGraph() {
         // this.coords = this.nameCoords(this.coords);
-
         var graph = {};
         var edges = {};
+        var obstactleCount = this.obstacle.features.length;
 
         for (let current of this.coords) {
             graph[current[2].toString()] = [];
@@ -28,12 +30,26 @@ class CalculateRoute {
                     // tailor the graph.
                     var path = turf.lineString([current, comparer]);
 
-                    if(
-                        turf.booleanCrosses(path, polygon.features[0]) 
-                        // ||
-                        // turf.booleanCrosses(path, polygon.features[1])
-                    ) {
-                        console.log("Object");
+                    // let booleanCrossesArray = this.obstacle.features.map(feature => turf.booleanCrosses(path, feature));
+                    let booleanCrosses = false;
+
+                    console.time("Crosses");
+                    for (let index = 0; index < obstactleCount; index++) {
+                        let feature = this.obstacle.features[index];
+
+                        if(turf.booleanCrosses(path, feature)) {
+                            // console.log(index);
+                            booleanCrosses = true;
+                            break;
+                        }
+                        
+                    }
+                    
+                    console.timeEnd("Crosses");
+                    // console.log(booleanCrossesArray);
+                    // let booleanCrosses = booleanCrossesArray.find(bcross => bcross);
+                    if(booleanCrosses) {
+                        // console.log("Object:" + [current, comparer]);
                         continue
                     }else {
                         let weight = this.distanceBetweenNodes(current, comparer);
@@ -47,23 +63,39 @@ class CalculateRoute {
             }
         }
 
+        this.graph = graph;
+        this.edges = edges;
+
         console.log(edges);
         return [graph, edges];
     }
 
     distanceBetweenNodes(start, stop) {
         // get the distance
-        var start = start.slice(0,2).reverse();
-        var end = stop.slice(0,2).reverse();
+        var start = start;
+        var end = stop;
 
         var options = {
             obstacles: polygon
         };
 
-        // var path = turf.shortestPath(start, end, options);
-        let distance = Math.sqrt(Math.pow((start[0] - end[0]),2)- Math.pow((start[1] - end[1]),2))
+        let radius = 63710000;
+        const lat1 = start[0] * Math.PI / 180;
+        const lat2 = end[0] * Math.PI / 180;
+        const lng1 = start[1] * Math.PI / 180;
+        const lng2 = end[1] * Math.PI / 180;
 
-        return distance * 1000;
+        const dlat = lat1 - lat2;
+        const dlng = lng1 - lng2;
+
+        let a = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlng / 2), 2);
+
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        let distance = radius * c;
+        // console.log(distance);
+
+        return distance;
     }
 
     nameCoords(coords) {
@@ -81,7 +113,7 @@ class CalculateRoute {
         distances[endNode] = "Infinity";
         distances[startNode] = Object.assign(distances, graph[startNode]);
 
-        console.log(distances);
+        // console.log(distances);
 
         // track paths using hash object
         let parents = {endNode:null};
@@ -89,14 +121,14 @@ class CalculateRoute {
             parents[child] = startNode;
         }
 
-        console.log(parents);
+        // console.log(parents);
         // collect visited node
         let visited = [];
 
         // find the nearest node
         let node = this.shortestDistanceNode(distances, visited);    
 
-        console.log(node);
+        // console.log(node);
         // for that node
         while(node) {
             // find its distance from the start node & its child nodes
@@ -127,7 +159,7 @@ class CalculateRoute {
 
         }
 
-        console.log(parents);
+        // console.log(parents);
         // using the stored paths from start node to end node
         // record the shortest path
         let shortestPath = [endNode];
@@ -164,29 +196,28 @@ class CalculateRoute {
         return shortest;
     }
 
-    getRoute() {
-        console.time("graph");
-        let [graph, edges] = this.createGraph();
-        console.timeEnd("graph");
+    getRoute(start, stop, edges) {
+        // let [graph, edges] = this.createGraph();
+        if(edges) {
+            this.edges = edges;
+        }
 
-        console.time("ShortestPath");   
-        let {distances, path} = this.getShortestPath(edges, this.start, this.stop);
-        console.timeEnd("ShortestPath");
+        let {distances, path} = this.getShortestPath(this.edges, start, stop);
 
         let pt = path.map(pt => parseInt(pt));
 
-        console.log(pt);
         let stpCoord = pt.reduce((pv,ac, i) => {
-            if(this.coords[ac]) {
-                pv.push(this.coords[ac]);
+            let coord = this.coords.find(cod => cod[2] == ac)
+            if(coord) {
+                pv.push(coord);
             }
             return pv;
         }, []);
 
-        console.log(stpCoord);
+        // console.log(stpCoord);
 
-        if(!stpCoord[0]) {
-            throw Error("No path found");
+        if(stpCoord.length < 2) {
+            return "No path found";
         }
         let shortestPath = turf.lineString(stpCoord);
 
@@ -200,3 +231,7 @@ class CalculateRoute {
         return dir;
     }
 }
+
+
+// explore ansynchronous code
+// cache the edges: 
