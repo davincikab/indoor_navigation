@@ -219,7 +219,25 @@ export default class CalculateRoute {
         if(stpCoord.length < 2) {
             return "No path found";
         }
+
         let shortestPath = turf.lineString(stpCoord);
+
+        // add path properties
+        let distance = turf.length(shortestPath) * 1000;
+        let time = distance / 1.2;
+
+        if(time > 60) {
+            let minutes = Math.floor(time / 60);
+            let seconds = Math.ceil(time % 60);
+
+            time = minutes + "min " + seconds + "secs"
+        } else {
+            let seconds = Math.ceil(time);
+            time =  seconds + "secs"
+        }
+
+        shortestPath.properties.distance = Math.ceil(distance);
+        shortestPath.properties.time = time;
 
         // add path to map
         return shortestPath;

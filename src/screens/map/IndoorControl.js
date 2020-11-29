@@ -35,9 +35,9 @@ const IndoorControl = ({levels, activeLevel, onPress, onToggleGeocoder}) => {
                 text="Go"
                 styles={{
                     height:35,
-                    width:42,
-                    marginRight:0,
-                    borderRadius:17,
+                    width:46,
+                    marginLeft:2,
+                    borderRadius:10,
                     marginBottom:5
                 }}
         />
@@ -92,14 +92,11 @@ IndoorControl.defualtProps = {
 
 const styles = StyleSheet.create({
     indoorControl:{
-        // position:"absolute",
-        // bottom:20,
-        // right:16,
         zIndex:1,
         padding:4,
         flex:1,
         width:48,
-        backgroundColor:"white",
+        backgroundColor:"transparent",
         padding:0,
         overflow:"hidden"
     },
@@ -107,15 +104,17 @@ const styles = StyleSheet.create({
         position:"relative",
         backgroundColor:"white",
         height:39,
-        width:48,
-        borderWidth:2,
+        width:46,
+        borderRadius:10,
+        borderWidth:StyleSheet.hairlineWidth,
         borderColor:"#ddd",
         paddingVertical:4,
         paddingHorizontal:5,
         fontSize:15,
         display:"flex",
         alignItems:'center',
-        justifyContent:"center"
+        justifyContent:"center",
+        margin:1
     },
     activeTab:{
         backgroundColor:'#252525'

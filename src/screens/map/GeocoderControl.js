@@ -7,7 +7,8 @@ import {
     TouchableOpacity,
     TouchableHighlight, 
     Text,
-    Button} from 'react-native';
+    Keyboard,
+    Image} from 'react-native';
 import RoundButton from '../../library/RoundButton';
 import edges from '../../../assets/data/edges';
 import CalculateRoute from '../../utils/routing/CalculateRoute';
@@ -36,13 +37,21 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
 
     // update the zIndex
     useEffect(() => {
-        console.log("GeocoderIndex: " + controlIndex);
+        console.log("GeocoderIndex: " + controlZIndex);
         setControlIndex(controlZIndex);
 
         let points = JSON.parse(JSON.stringify(data));
         points.features = points.features.filter(feature => feature.properties.level == activeLevel);
         setIndoorPoints(points);
     }, [controlZIndex, activeLevel]);
+
+    // calculate route
+    useEffect(() => {
+        if(Boolean(destinationAddress) || Boolean(startAddress)) {
+            Keyboard.dismiss();
+            calculateRoute();
+        }
+    },[destination, origin])
 
 
     // filter addresses
@@ -132,8 +141,9 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
 
         console.log(routeFeatures);
         if(routeFeatures.type) {
+            let feature = JSON.parse(JSON.stringify(routeFeatures));
             // strip the extra coordinates
-            routeFeatures.geometry.coordinates = routeFeatures.geometry.coordinates.map(coord => {
+            feature.geometry.coordinates = feature.geometry.coordinates.map(coord => {
                 coord = coord.slice(0,2);
                 return coord
             });
@@ -142,11 +152,11 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
 
             let geojsonRoute = {
                 'type':'FeatureCollection',
-                'features':[routeFeatures]
+                'features':[feature]
             };
 
             console.log(geojsonRoute);
-            updatePath(geojsonRoute, origin, destination);
+            updatePath(routeFeatures, geojsonRoute, origin, destination);
 
         } else {
             // update route info
@@ -185,7 +195,6 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
     }
 
 
-
     return (
         <View
             style={{
@@ -193,30 +202,37 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
                 ...styles.geocoderView
             }}
         >   
-            <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => toggleGeocoder()}
-            >
-                <Text>Back</Text>
-            </TouchableOpacity>
-            <TextInput
-                style={styles.formControl}
-                key={'start'}
-                placeholder={"Current Location ...."}
-                onChangeText={text => onStartLocationChange(text)}
-                onFocus={() => setActiveInput("origin")}
-                value={startAddress}
-            ></TextInput>
+            <View style={styles.geocoderHeader}>
+                <TouchableOpacity 
+                    style={styles.backButton}
+                    onPress={() => toggleGeocoder()}
+                >
+                   <Image source={require("../../../assets/images/left-arrow.png")} />
+                </TouchableOpacity>
+                <View style={{flex:1}}>
+                    <TextInput
+                        style={styles.formControl}
+                        key={'start'}
+                        placeholder={"Current Location ...."}
+                        onChangeText={text => onStartLocationChange(text)}
+                        onFocus={() => setActiveInput("origin")}
+                        value={startAddress}
+                    />
 
-            <TextInput
-                style={styles.formControl}
-                key={"destination"}
-                placeholder={"Destination Location ...."}
-                onChangeText ={text => onDestinatioLocationChange(text)}
-                onFocus={() => setActiveInput("destination")}
-                value={destinationAddress}
-            ></TextInput>
+                    <TextInput
+                        style={styles.formControl}
+                        key={"destination"}
+                        placeholder={"Destination Location ...."}
+                        onChangeText ={text => onDestinatioLocationChange(text)}
+                        onFocus={() => setActiveInput("destination")}
+                        value={destinationAddress}
+                    />
+                </View>
+                <View style={{flex:0.3,alignItems:'center', justifyContent:'center'}}>
+                    <Image source={require("../../../assets/images/up-and-down.png")} />
+                </View>
 
+            </View>
             {/* Results View */}
             <View
                 style={ styles.resultsView}
@@ -224,6 +240,7 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
                 {
                     addresses[0] &&
                     <FlatList
+                        keyboardShouldPersistTaps={'handled'}
                         data={addresses}
                         renderItem={renderItem}
                         keyExtractor={item => item.properties.fid.toString()}
@@ -231,65 +248,51 @@ const GeocoderControl = ({data, controlZIndex, activeLevel, toggleGeocoder, upda
                 }
                 
             </View>
-            {
-                Boolean(destinationAddress) && Boolean(startAddress) &&
-                <RoundButton
-                    onPress={calculateRoute}
-                    text="Go home"
-                    styles={{
-                        borderRadius:35,
-                        height:70,
-                        width:70,
-                        marginLeft:"40%",
-                    }}
-                />
-             }
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     geocoderView:{
-        display:"none",
-        flex:0,
+        flex:1,
         position:"absolute",
-        top:4,
+        top:0,
         left:0,
         right:0,
-        bottom:0,
+        // bottom:0,
         backgroundColor:'white'
+    },
+    geocoderHeader:{
+        borderBottomColor:'#ddd',
+        borderBottomWidth:StyleSheet.hairlineWidth,
+        paddingVertical:8,
+        flexDirection:'row',
+        justifyContent:'flex-start'
     },
     formControl:{
         paddingHorizontal:12,
         paddingVertical:5,
         backgroundColor:"white",
         borderColor:"#ddd",
-        borderWidth:0.5,
-        borderTopWidth:0,
-        borderLeftWidth:0,
-        borderRightWidth:0,
-        marginHorizontal:25
+        borderWidth:1,
+        borderRadius:4,
+        marginBottom:4,
+        marginLeft:10,
     },
     backButton:{
-        position:"relative",
-        backgroundColor:'#de34',
-        width:36,
+        height:20,
         marginLeft:3,
         marginTop:2,
-        marginBottom:0,
         paddingHorizontal:2,
-        paddingVertical:4
     },
     resultsView:{
-        flex:0.8,
+        flex:1,
         backgroundColor:'white',
-        // height:450,
         marginTop:10
-        // paddingHorizontal:30
     },
     resultItem:{
         paddingVertical:5,
-        borderTopWidth:1,
+        borderBottomWidth:1,
         borderColor:"#ddd",
         paddingHorizontal:30
     },
