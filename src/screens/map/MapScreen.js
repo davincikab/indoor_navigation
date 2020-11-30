@@ -101,20 +101,35 @@ export default class MapContainer extends React.Component {
     
         allfloors.features = activeFloorData;
 
-        this.setState({
-          activeLevel:level,
-          activeFloor:allfloors
-        });
+        const { searchRoom } = this.state;
+        if(searchRoom.properties && searchRoom.properties.level != level) {
+          this.setState({
+            activeLevel:level,
+            activeFloor:allfloors,
+            searchRoom:{},
+            value:'',
+            center:[36.962846352233818, -0.399017834239519],
+            zoom:18.8
+          });
+        } else {
+          this.setState({
+            activeLevel:level,
+            activeFloor:allfloors
+          });
+        }
 
     }
 
+    // display geocoder
     toggleGeocoder = () => {
       this.state.controlIndex == 0 ? this.setState({controlIndex:3}) : this.setState({controlIndex:0});
       this.setState({
         startLocation:{},
         stopLocation:{},
         path:{},
-        shortestPath:{}
+        shortestPath:{},
+        value:'',
+        searchRoom:{}
       });
     }
 
@@ -134,7 +149,9 @@ export default class MapContainer extends React.Component {
         shortestPath:route,
         startLocation:origin,
         stopLocation:destination,
-        path:path
+        path:path,
+        zoom:18.8,
+        center:[36.962846352233818, -0.399017834239519],
       });
     }
 
