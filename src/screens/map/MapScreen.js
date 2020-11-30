@@ -2,8 +2,11 @@ import React from 'react';
 import { 
   StyleSheet, 
   View, 
+  Keyboard,
+  FlatList,
   KeyboardAvoidingView, 
   Text,
+  TextInput,
   Image,
   TouchableOpacity,
 } from "react-native";
@@ -73,7 +76,10 @@ export default class MapContainer extends React.Component {
             threed:false,
             path:{},
             shortestPath:{},
-            positionMarker:[]
+            positionMarker:[],
+            roomResults:[],
+            searchRoom:{},
+            value:''
         };
 
     }
@@ -142,6 +148,76 @@ export default class MapContainer extends React.Component {
         });
     }
 
+    // zoom to home
+    zoomToHome = (item) => {
+      Keyboard.dismiss();
+      this.searchInput.blur();
+
+      this.setState({
+        searchRoom:item,
+        center:item.geometry.coordinates,
+        roomResults:[],
+        value:item.properties.Name,
+        activeLevel:item.properties.level,
+        zoom:20.5
+      });
+
+      this.onFloorChange(item.properties.level);
+    }
+
+    // line
+    onChangeText = (text) => {
+      console.log(text);
+      if(!text) {
+        this.setState({
+          roomResults:[],
+          searchRoom:{},
+          value:''
+        });
+  
+        return;
+      }
+  
+      // filter all
+      const allHomes = JSON.parse(JSON.stringify(points));
+  
+      let rooms = allHomes.features.map(roomResult => {
+          if(roomResult.properties.Name &&
+            roomResult.properties.Name.toLowerCase()
+              .includes(text.toLowerCase())
+          ) {
+  
+            return roomResult;
+          }
+      }).filter(ft=> ft);
+      
+      // slice data
+     rooms = rooms.length > 5 ? rooms.slice(0,6) :rooms;
+      
+      // update the state
+      this.setState({
+        value:text,
+        roomResults:rooms
+      });
+    }
+  
+    onFocus = (e) => {
+      this.onChangeText(this.state.value);
+    }
+  
+    // render res items
+    renderItem = ({item}) => {
+      return (
+          <View style={styles.item}>
+            <TouchableOpacity
+              onPress={() => this.zoomToHome(item)}
+            >
+              <Text>{item.properties.Name}, floor {item.properties.level}</Text>
+            </TouchableOpacity>   
+          </View>
+      );
+    }
+
     // load the data 
     componentDidMount() {
         MapboxGL.setTelemetryEnabled(false);
@@ -166,7 +242,7 @@ export default class MapContainer extends React.Component {
         // let activeFloor = this.state.activeFloor;
         const { center, zoom, pitch, controlIndex, path, activeFloor,
            shortestPath, startLocation,stopLocation, 
-           activeLevel, threed, positionMarker } = this.state;
+           activeLevel, threed, positionMarker, roomResults, value, searchRoom} = this.state;
 
         console.log("PositionMarker");
         console.log(positionMarker);
@@ -192,11 +268,37 @@ export default class MapContainer extends React.Component {
                   />
                 </View>
               }
+
+            {  controlIndex == 0 &&
+              <View style={styles.searchControl}>
+                <TextInput
+                    ref={(input) => (this.searchInput = input)}
+                    style={styles.textInput}
+                    onChangeText={text => this.onChangeText(text)}
+                    onFocus={e => this.onFocus(e)}
+                    value={value}
+                    placeholder={"Search room ...."}
+                />
+
+                {roomResults[0] &&
+                    <FlatList 
+                        keyboardShouldPersistTaps={'handled'}
+                        style={styles.roomResultList}
+                        data={roomResults}
+                        renderItem={(item) => this.renderItem(item)}
+                        keyExtractor={item => item.properties.fid}
+                    />
+                }
+                </View>
+
+              }
+
             
               <View style={{flex:1, position:'relative'}}>
                 <MapboxGL.MapView 
                   ref={(ref) => (this.map = ref)}
-                  style={styles.map} 
+                  style={styles.map}
+                  compassEnabled={true}
                 >
                 <MapboxGL.Camera
                   zoomLevel={zoom}
@@ -275,6 +377,16 @@ export default class MapContainer extends React.Component {
                   </MapboxGL.MarkerView>
                 }
 
+              {
+                searchRoom.properties &&
+                <MapboxGL.MarkerView 
+                    coordinate={searchRoom.geometry.coordinates}  
+                    anchor={{x: 0, y: 0}}
+                >
+                   <Image source={require("../../../assets/images/icon.png")} />
+                </MapboxGL.MarkerView>
+              }
+
             </MapboxGL.MapView>
 
             <IndoorControl 
@@ -286,7 +398,7 @@ export default class MapContainer extends React.Component {
 
             <TouchableOpacity
               onPress= {this.toggleViewMode}
-              style={styles.buttonSpeechStart}
+              style={styles.button}
             >
               <Text 
                 styles={{
@@ -333,11 +445,47 @@ const styles = StyleSheet.create({
     directionContainer:{
       flex:0.4
     },
-    buttonSpeechStart:{
+    searchControl:{
+      position:"absolute",
+      top:0,
+      right:0,
+      left:0,
+      zIndex:1,
+      paddingHorizontal:5,
+      marginHorizontal:40,
+      backgroundColor: 'transparent'
+    },
+    textInput:{
+      backgroundColor:'#fff',
+      height:40, 
+      borderColor: 'gray', 
+      borderWidth: 0, 
+      marginHorizontal:10,
+      shadowColor: "#000",
+      shadowOffset: {
+          width: 0,
+          height: 3,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      marginTop:10,
+      borderRadius:20,
+      paddingHorizontal:10,
+      fontSize:15
+    },
+    resultList:{
+        marginTop:10,
+        backgroundColor:'transparent'
+    },
+    button:{
       position:"absolute",
       zIndex:1,
       top:12,
       left:12,
+      borderRadius:6,
+      borderColor:"#ddd",
+      borderWidth:StyleSheet.hairlineWidth,
       backgroundColor:'#fff',
       padding:6,
       display:"flex",
@@ -370,5 +518,14 @@ const styles = StyleSheet.create({
       fontWeight:"700",
       fontSize:15,
       color:"#fff"
-    }
+    },
+    item:{
+      backgroundColor:"#fff",
+      borderTopColor:"#ddd",
+      borderTopWidth:1,
+      paddingVertical:4,
+      paddingHorizontal:5,
+      marginHorizontal:10,
+      fontSize:15
+  }
 });
