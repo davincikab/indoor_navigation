@@ -22,14 +22,17 @@ export default class DirectionsControl extends React.Component {
             time:null,
             distance:null,
             audioOn:false,
+            isPlayMode:false,
             start:false,
             end:false,
             activeDirection:{},
+            activeDirectionIndex:0,
             recognized:false,
             language:'en-US',
             voice:'',
         };
 
+        this.itemsRef = React.createRef();
         this.textToSpeech.bind(this);
 
         Tts.setDefaultLanguage(this.state.language);
@@ -50,23 +53,19 @@ export default class DirectionsControl extends React.Component {
         });
         
         console.log("Active Direction speak")
-        console.log(activeDirection.item.from);
+        console.log(activeDirection);
 
-        if(activeDirection.isViewable) {
-            let textInfo = activeDirection.item.turn;
-
+        if(activeDirection.from) {
+            let textInfo = activeDirection.turn
             if(activeDirection.index == 0) {
-                textInfo =  "From " + textInfo + " walk " + activeDirection.item.distance + " metres";
-               
+                textInfo =  "From " + textInfo + " walk " + activeDirection.distance + " metres";
             } else if( activeDirection.index == directions.length -1) {
                 textInfo = 'You have arrived at your destination: ' + textInfo;
             } else {
-                textInfo = textInfo + " and Walk " + activeDirection.item.distance + " metres";
+                textInfo = textInfo + " and Walk " + activeDirection.distance + " metres";
             }
 
             Tts.speak(textInfo);
-
-
             
         }
         
@@ -81,25 +80,6 @@ export default class DirectionsControl extends React.Component {
           language,
           voice
         });
-    }
-
-    onViewableItemsChanged = ({viewableItems, changed}) => {
-        console.log("Active Item");
-        console.log(changed);
-
-        if(viewableItems[0]) {
-            this.setState({
-                activeDirection:changed[0]
-            }, () => {
-                if(this.state.audioOn) {
-                    this.textToSpeech();
-                }
-                
-                this.props.onPress(this.state.activeDirection.item)
-            });
-        }
-        
-        
     }
 
     onAudioPress = () => {
@@ -136,6 +116,53 @@ export default class DirectionsControl extends React.Component {
         this.props.onPress(item);
     }
 
+    onPlayPress = () => {
+        console.log("Play route");
+
+        const { isPlayMode } = this.state;
+        this.setState({
+            isPlayMode:!isPlayMode
+        }, () => {
+            // call the loop function to iterate the flatlist Item
+            if(this.state.isPlayMode) {
+                this.timeInterval = setInterval((e) => {
+                    let { activeDirectionIndex, directions } = this.state;
+                    activeDirectionIndex = activeDirectionIndex + 1;
+
+                    console.log('item index');
+                    console.log(activeDirectionIndex);
+                    if(activeDirectionIndex == directions.length) {
+                        activeDirectionIndex = 0;
+                        clearInterval(this.timeInterval);
+                    }
+
+                    this.slideTo(activeDirectionIndex);
+                }, 5000);
+            } else {
+                clearInterval(this.timeInterval);
+            }
+        });
+    }
+
+    slideTo = (index) => {
+        // console.log(this.itemsRef);
+        // call slide to
+
+        const { directions } = this.state;
+        
+        this.props.onPress(directions[index]);
+        this.itemsRef.current.scrollToIndex({index});
+
+        this.setState({
+            activeDirectionIndex:index,
+            activeDirection:directions[index]
+        }, () => {
+            if(this.state.audioOn) {
+                this.textToSpeech();
+            }
+        });
+    }
+
     renderItem = ({ item, index }) => {
         const { directions } = this.state;
 
@@ -170,15 +197,43 @@ export default class DirectionsControl extends React.Component {
         )
     }
 
+    getDirectionsWithTurn = (directions) => {
+        directions.forEach((direction, index) => {
+            let turn;
+            if(index == 0) {
+                turn = direction.from;
+            } else if( index == directions.length -1) {
+                turn = direction.from;
+            } else {
+                let angle = direction.bearing - directions[index-1].bearing;
+                angle = angle < 0 ? angle + 2 * 180 : angle;
+    
+                turn = !Boolean(angle) ? "Head Straight": angle == 0  ? "Head Straight" : angle < 180 ? 'Turn Left' : "Turn Right";
+            }
+            
+            direction.turn = turn;
+            direction.index = index;
+
+            return directions;
+        });
+
+        return directions;
+        
+    }
+
     componentDidMount() {
         const {isCollapsed, path} = this.props;
         let directions = getDirections(path);
+
+        // update the turns
+        directions = this.getDirectionsWithTurn(directions);
 
         console.log(directions);
         this.setState({
             isCollapsed:isCollapsed,
             path:path,
             directions:directions,
+            activeDirection:directions[0],
             distance:path.properties.distance,
             time:path.properties.time
         });
@@ -187,10 +242,12 @@ export default class DirectionsControl extends React.Component {
     componentWillUnMount() {
         Voice.destroy().then(Voice.removeAllListeners());
         Tts.stop();
+
+        clearInterval(this.timeInterval);
     }   
 
     render() {
-        const { isCollapsed, directions, time, distance, audioOn} = this.state;
+        const { isCollapsed, directions, time, distance, audioOn, isPlayMode} = this.state;
         let zIndex = isCollapsed ? 0 : 3;
         return (
             <View style={{
@@ -205,10 +262,19 @@ export default class DirectionsControl extends React.Component {
                     </View>
 
                     <View style={styles.audioControl}>
-                        <TouchableOpacity onPress={this.onAudioPress}>
+                        <TouchableOpacity onPress={this.onAudioPress} style={styles.buttonControl}>
                             <Image 
+                                style={styles.buttonControlImage}
                                 source={
                                     audioOn ? require("../../assets/images/volume.png") : require("../../assets/images/mute.png")
+                                } 
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={this.onPlayPress} style={styles.buttonControl}>
+                            <Image
+                                style={styles.buttonControlImage} 
+                                source={
+                                    isPlayMode ? require("../../assets/images/pause-button.png") : require("../../assets/images/play-button.png")
                                 } 
                             />
                         </TouchableOpacity>
@@ -221,6 +287,7 @@ export default class DirectionsControl extends React.Component {
 
                         {/* HORIZONTAL */}
                         <FlatList
+                            ref={this.itemsRef}
                             style={styles.stepsTab}
                             data={directions}
                             keyExtractor={item => item.from}
@@ -257,7 +324,7 @@ const styles = StyleSheet.create({
         justifyContent:'flex-start',
         alignItems:'center',
         paddingVertical:5,
-        paddingHorizontal:10,
+        paddingHorizontal:20,
         backgroundColor:"#fff",
         flexDirection:'row',
         borderBottomWidth:StyleSheet.hairlineWidth,
@@ -295,7 +362,16 @@ const styles = StyleSheet.create({
         fontSize:20
     },
     audioControl:{
-        marginRight:20
+        marginRight:20,
+        flexDirection:'row',
+        justifyContent:'space-between'
+    },
+    buttonControl:{
+        marginHorizontal:5,
+    },
+    buttonControlImage:{
+        height:18,
+        resizeMode:'contain'
     },
     timeText:{
         color:'#156504',

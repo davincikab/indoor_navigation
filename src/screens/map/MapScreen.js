@@ -138,7 +138,7 @@ export default class MapContainer extends React.Component {
         this.setState({
           positionMarker:[...item.coordinates].slice(0,2),
           center:[...item.coordinates].slice(0,2),
-          zoom:22
+          zoom:19.5
         });
     }
 
