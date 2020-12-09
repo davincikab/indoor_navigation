@@ -1,4 +1,15 @@
 {
-  "name": "indoorNavigation",
-  "displayName": "indoorNavigation"
+  "name": "Indoor Navigation",
+  "displayName": "Indoor Navigation",
+  "expo":{
+    "name":"Indoor Navigation",
+    "description":"Offline Indoor Navigation Application",
+    "slug":"indoornavigation",
+    "sdkVersion":"39.0.0",
+    "version":"1.0.0",
+    "icon":"./assets/images/logo.png",
+    "android": {
+      "package": "com.indoornavigation"
+    }
+  }
 }
